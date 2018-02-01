@@ -1,10 +1,4 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- * @flow
- */
-
-import React, { PureComponent } from 'react';
+import React, { Component } from 'react';
 import {
   FlatList,
   StyleSheet,
@@ -13,11 +7,12 @@ import {
   View,
   StatusBar,
   Dimensions,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import PropTypes from 'prop-types';
 
-class FlatListItem extends PureComponent {
+class FlatListItem extends Component {
   static propTypes = {
     children: PropTypes.node.isRequired,
   };
@@ -33,14 +28,74 @@ class FlatListItem extends PureComponent {
   }
 }
 
-class ItemSeparatorComponent extends PureComponent {
+class ItemSeparatorComponent extends Component {
   render() {
     return <View style={sepator} />;
   }
 }
 
-export default class App extends PureComponent {
+export default class App extends Component {
+  state = {
+    timer: 0,
+    laps: [],
+  };
+  id = 1;
+
+  _counter = () => this.setState(state => ({ timer: state.timer + 1 }));
+
+  _handleStartTimer = () => {
+    this.startTimer = setInterval(this._counter, 1000);
+  };
+
+  _handleClearTimer = () => {
+    this.id = this.id + 1;
+    this.setState(state => {
+      laps: state.laps.length > 0
+        ? state.laps.push({
+            id: this.id,
+            value: state.timer - state.laps.reduce((a, b) => (a > b ? a : b)).value,
+          })
+        : state.laps.push({ id: this.id, value: state.timer });
+    });
+    clearInterval(this.startTimer);
+  };
+
+  componentWillUnmount() {
+    clearInterval(this.startTimer);
+  }
+
+  _keyExtractor = (item, index) => item.id;
+
+  prettifySeconds = seconds => {
+    let currentTime;
+    let hours = 0;
+    let minutes = 0;
+    let currentSeconds = 0;
+
+    if (seconds >= 3600) {
+      hours = Math.floor(seconds / 3600);
+    }
+
+    if (seconds > 59) {
+      currentTime = seconds - 3600 * hours;
+      let currentMinutes = Math.floor(currentTime / 60);
+      minutes = currentMinutes;
+      currentSeconds = currentTime - currentMinutes * 60;
+    } else {
+      currentSeconds = seconds;
+    }
+
+    return {
+      hours: `${('00' + hours).slice(-2)}`,
+      minutes: `${('00' + minutes).slice(-2)}`,
+      seconds: `${('00' + currentSeconds).slice(-2)}`,
+    };
+  };
+
   render() {
+    const { timer, laps } = this.state;
+    const { hours, minutes, seconds } = this.prettifySeconds(timer);
+    const initialData = [...laps];
     return (
       <View style={styles.container}>
         <StatusBar barStyle="light-content" />
@@ -51,32 +106,42 @@ export default class App extends PureComponent {
           end={{ x: 1, y: 0.5 }}
         >
           <View style={[timerStylesOne, textPadding]}>
-            <Text style={timerStylesOneText}>00:00:00</Text>
+            <Text style={timerStylesOneText}>01:10:00</Text>
           </View>
           <View style={[timerStylesTwo, textPadding]}>
-            <Text style={[timerStylesTwoText]}>00:00:00</Text>
+            <Text style={[timerStylesTwoText]}>{`${hours}:${minutes}:${seconds}`}</Text>
           </View>
         </LinearGradient>
 
         <View style={timerListStyles}>
           <View style={btnWrapper}>
-            <TouchableOpacity activeOpacity={0.5} style={[btn, btnOne]} onPress={() => {}}>
-              <View>
-                <Text style={btnTextOne}>STOP</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.5} style={[btn, btnTwo]} onPress={() => {}}>
+            <TouchableOpacity
+              activeOpacity={0.5}
+              style={[btn, btnTwo]}
+              onPress={this._handleStartTimer}
+            >
               <View>
                 <Text style={btnTextTwo}>START</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              activeOpacity={0.5}
+              style={[btn, btnOne]}
+              onPress={this._handleClearTimer}
+            >
+              <View>
+                <Text style={btnTextOne}>STOP</Text>
               </View>
             </TouchableOpacity>
           </View>
           <View>
             <View style={flatListWrapper}>
               <FlatList
-                data={[{ key: '00:00:30' }, { key: '00:00:40' }, { key: '00:00:50' }]}
-                renderItem={({ item }) => <FlatListItem>{item.key}</FlatListItem>}
+                data={laps}
+                renderItem={({ item }) => <FlatListItem key={item.id}>{item.value}</FlatListItem>}
                 ItemSeparatorComponent={ItemSeparatorComponent}
+                extraData={this.state}
+                keyExtractor={this._keyExtractor}
               />
             </View>
           </View>
@@ -104,7 +169,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   watchText: {
-    fontSize: 28,
+    fontSize: 29,
     paddingVertical: 8,
     fontFamily: 'Cochin',
     fontWeight: 'bold',
@@ -137,7 +202,7 @@ const styles = StyleSheet.create({
   },
   timerStylesOneText: {
     fontSize: 24,
-    color: '#fff',
+    color: '#ffffff',
   },
   timerStylesTwoText: {
     fontSize: 64,
