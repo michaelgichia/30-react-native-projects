@@ -35,7 +35,6 @@ class SearchInput extends Component {
 
   componentWillReceiveProps(nextProps) {
     if (nextProps && nextProps.closeKeyboard === false) {
-      console.warn({ nextProps });
       this.refs.inputRef.blur();
     }
   }

@@ -4,30 +4,60 @@ import {
   FETCH_WEATHER_DATA,
   FETCH_WEATHER_DATA_SUCCESS,
   FETCH_WEATHER_SUCCESS,
+  UPDATE_CITY,
 } from './constants';
 import data from './data';
 
 const initialAuthState = {
   city: '',
   cities: [],
-  closeKeyboard: null,
   isFetching: false,
+  cityObject: { name: '', id: null },
   weather: [],
+  today: {
+    temp: {
+      day: 0,
+    },
+    pressure: 0,
+    humidity: 0,
+    weather: [
+      {
+        description: '',
+        icon: '',
+      },
+    ],
+    speed: 0,
+    deg: 0,
+    clouds: 0,
+  },
 };
 
-function searchReducer(state = initialAuthState, actions) {
-  switch (actions.type) {
+const sortCities = cities =>
+  cities.sort((a, b) => {
+    if (a.name.toUpperCase() < b.name.toUpperCase()) {
+      return -1;
+    }
+    if (a.name.toUpperCase() > b.name.toUpperCase()) {
+      return 1;
+    }
+    return 0;
+  });
+
+function searchReducer(state = initialAuthState, action) {
+  switch (action.type) {
     case ON_INPUT_CHANGE:
       let cities;
-      if (actions.city.length > 0) {
-        cities = data.filter(x => x.name.includes(actions.city.trim()));
+      if (action.city.length > 0) {
+        const filteredCities = data.filter(x => x.name.includes(action.city.trim()));
+        cities = sortCities(filteredCities).slice(0, 5);
       } else {
         cities = [];
       }
       return {
         ...state,
-        city: actions.city,
+        city: action.city,
         cities,
+        closeKeyboard: null,
       };
 
     case CLEAR_STATE_CITIES:
@@ -50,10 +80,18 @@ function searchReducer(state = initialAuthState, actions) {
       };
 
     case FETCH_WEATHER_SUCCESS:
+      const today = action.data.reduce((a, c) => (a.dt < c.dt ? a : c));
       return {
         ...state,
-        weather: actions.data,
+        weather: action.data,
         isFetching: false,
+        today,
+      };
+
+    case UPDATE_CITY:
+      return {
+        ...state,
+        cityObject: action.cityObject,
       };
 
     default:

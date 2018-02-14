@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Animated, Easing } from 'react-native';
-import { StackNavigator, addNavigationHelpers } from 'react-navigation';
+import { addNavigationHelpers, StackNavigator } from 'react-navigation';
 import MainScreen from '../containers/MainScreen';
 import SearchScreen from '../containers/SearchScreen';
 import { addListener } from '../utils/redux';
@@ -17,7 +17,7 @@ export const AppNavigator = StackNavigator(
     },
   },
   {
-    initialRouteName: 'Search',
+    initialRouteName: 'Home',
     transitionConfig: () => ({
       transitionSpec: {
         duration: 0,
@@ -42,6 +42,7 @@ class AppWithNavigationState extends React.Component {
     dispatch: PropTypes.func.isRequired,
     nav: PropTypes.object.isRequired,
   };
+
   render() {
     const { dispatch, nav } = this.props;
     return (
@@ -61,3 +62,5 @@ const mapStateToProps = state => ({
 });
 
 export default connect(mapStateToProps)(AppWithNavigationState);
+
+// export default connect()(AppWithNavigationState);
